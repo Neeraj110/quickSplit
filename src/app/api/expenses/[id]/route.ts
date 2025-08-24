@@ -21,6 +21,16 @@ const SplitSchema = z.object({
     .max(1000000, "Split amount too large"),
 });
 
+// Move FileSchema inside the function scope or make it internal
+const FileSchema = z.object({
+  size: z.number().max(5 * 1024 * 1024, "File size must be less than 5MB"),
+  type: z
+    .enum(["image/jpeg", "image/png", "image/webp"])
+    .refine((val) => ["image/jpeg", "image/png", "image/webp"].includes(val), {
+      message: "Only JPEG, PNG, WebP files are allowed",
+    }),
+});
+
 const ExpenseUpdateSchema = z.object({
   amount: z
     .number()
@@ -64,16 +74,6 @@ const ExpenseUpdateSchema = z.object({
     })
     .optional(),
 });
-
-export const FileSchema = z.object({
-  size: z.number().max(5 * 1024 * 1024, "File size must be less than 5MB"),
-  type: z
-    .enum(["image/jpeg", "image/png", "image/webp"])
-    .refine((val) => ["image/jpeg", "image/png", "image/webp"].includes(val), {
-      message: "Only JPEG, PNG, WebP files are allowed",
-    }),
-});
-
 
 export async function PATCH(
   req: NextRequest,

@@ -6,7 +6,7 @@ import { Group } from "@/models/Group";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { z } from "zod";
-import { io } from "@/lib/socket";
+
 
 const MemberSchema = z.object({
   email: z.string().email("Invalid email"),

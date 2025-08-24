@@ -4,7 +4,7 @@ import connectDb from "@/lib/connectDb";
 import { User } from "@/models/User";
 import { Expense } from "@/models/Expense";
 import { Group } from "@/models/Group";
-import { Settlement } from "@/models/Settlement";
+import { Settlement, ISettlement } from "@/models/Settlement";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { Types } from "mongoose";
@@ -189,7 +189,7 @@ export async function POST(req: NextRequest) {
     }
 
     dbSession = await mongoose.startSession();
-    let createdSettlement;
+    let createdSettlement: ISettlement | undefined;
     await dbSession.withTransaction(async () => {
       const settlement = new Settlement({
         groupId: settlementData.groupId,
@@ -247,6 +247,10 @@ export async function POST(req: NextRequest) {
       .populate("groupId", "name")
       .lean();
 
+    if (!populatedSettlement) {
+      throw new Error("Failed to populate settlement data");
+    }
+
     return NextResponse.json(
       {
         settlement: populatedSettlement,
@@ -282,6 +286,35 @@ export async function POST(req: NextRequest) {
   }
 }
 
+// Add these interfaces at the top of your file
+interface PopulatedUser {
+  _id: string;
+  name: string;
+  email: string;
+}
+
+interface PopulatedGroup {
+  _id: string;
+  name: string;
+}
+
+interface PopulatedSettlement {
+  _id: string;
+  payerId: PopulatedUser;
+  receiverId: PopulatedUser;
+  groupId: PopulatedGroup;
+  amount: number;
+  description: string;
+  paymentMethod: string;
+  paymentDate: string;
+  notes?: string;
+  status: string;
+  expenseId: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Fix the GET function - replace the formattedSettlements mapping
 export async function GET(req: NextRequest) {
   try {
     await connectDb();
@@ -305,7 +338,7 @@ export async function GET(req: NextRequest) {
     if (groupId) query.groupId = groupId;
     if (status) query.status = status;
 
-    const [settlements, userGroups, expense] = await Promise.all([
+    const [settlements, userGroups] = await Promise.all([
       Settlement.find(query)
         .populate("payerId", "name email")
         .populate("receiverId", "name email")
@@ -316,6 +349,9 @@ export async function GET(req: NextRequest) {
         .select("_id name members")
         .lean(),
     ]);
+
+    // Type the settlements properly
+    const typedSettlements = settlements as unknown as PopulatedSettlement[];
 
     // Calculate outstanding balances
     const balancesByGroup = new Map();
@@ -331,7 +367,12 @@ export async function GET(req: NextRequest) {
         const expenses = await Expense.find({ groupId: group._id }).lean();
         let user1OwesUser2 = 0;
         for (const expense of expenses) {
-          const payerId = expense.payerId.toString();
+          // Fixed: Check if your Expense model uses 'payerId' or 'paidBy'
+          // Use the correct field name from your Expense model
+          const payerId =
+            expense.payerId?.toString() || expense.paidBy?.toString();
+          if (!payerId) continue;
+
           const splits = expense.splits;
           const user1Split = splits.find(
             (s: ISplit) => s.userId.toString() === currentUser._id.toString()
@@ -346,18 +387,19 @@ export async function GET(req: NextRequest) {
             user1OwesUser2 += user1Split.amount;
           }
         }
+
         const { netBalance } = await Settlement.calculateBalance(
-          group._id,
-          currentUser._id,
+          new Types.ObjectId(group._id as string),
+          new Types.ObjectId(currentUser._id),
           memberId
         );
         const balance = user1OwesUser2 - netBalance;
 
         if (Math.abs(balance) > 0.01) {
-          // collect related expenseIds between these two users
           const relatedExpenses = expenses
             .filter((expense) => {
-              const payerId = expense.payerId.toString();
+              const payerId =
+                expense.payerId?.toString() || expense.paidBy?.toString();
               return (
                 payerId === currentUser._id.toString() ||
                 payerId === memberId.toString()
@@ -381,36 +423,36 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // Format settlements
-    const formattedSettlements = settlements.map((settlement) => ({
-      _id: settlement._id,
-      type:
-        settlement.payerId._id.toString() === currentUser._id.toString()
-          ? "you_paid"
-          : "paid_you",
-      person:
-        settlement.payerId._id.toString() === currentUser._id.toString()
+    // Fixed: Properly format settlements with all required fields
+    const formattedSettlements = typedSettlements.map((settlement) => {
+      const isCurrentUserPayer =
+        settlement.payerId._id.toString() === currentUser._id.toString();
+
+      return {
+        _id: settlement._id,
+        type: isCurrentUserPayer ? "you_paid" : "paid_you",
+        person: isCurrentUserPayer
           ? settlement.receiverId.name
-          : settlement.payerId.name,
-      personId:
-        settlement.payerId._id.toString() === currentUser._id.toString()
+          : settlement.payerId.name, // Added missing field
+        personId: isCurrentUserPayer
           ? settlement.receiverId._id
           : settlement.payerId._id,
-      amount: settlement.amount,
-      group: settlement.groupId.name,
-      groupId: settlement.groupId._id,
-      expenseId: settlement.expenseId,
-      description: settlement.description,
-      paymentMethod: settlement.paymentMethod,
-      paymentDate: settlement.paymentDate,
-      notes: settlement.notes,
-      status: settlement.status,
-      createdAt: settlement.createdAt,
-      updatedAt: settlement.updatedAt,
-    }));
+        amount: settlement.amount,
+        group: settlement.groupId.name, // Added missing field
+        groupId: settlement.groupId._id,
+        expenseId: settlement.expenseId,
+        description: settlement.description,
+        paymentMethod: settlement.paymentMethod,
+        paymentDate: settlement.paymentDate,
+        notes: settlement.notes,
+        status: settlement.status,
+        createdAt: settlement.createdAt,
+        updatedAt: settlement.updatedAt,
+      };
+    });
 
-    // Flatten balances
     const outstandingBalances = Array.from(balancesByGroup.values()).flat();
+
     return NextResponse.json(
       {
         settlements: formattedSettlements,

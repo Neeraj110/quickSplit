@@ -15,7 +15,7 @@ interface ISplit {
   amount: number;
 }
 
-export const SplitSchema = z.object({
+const SplitSchema = z.object({
   userId: z.string().refine((id) => Types.ObjectId.isValid(id), {
     message: "Invalid user ID format",
   }),
@@ -25,7 +25,7 @@ export const SplitSchema = z.object({
     .max(1000000, "Split amount too large"),
 });
 
-export const ExpenseFormSchema = z.object({
+const ExpenseFormSchema = z.object({
   groupId: z.string().refine((id) => Types.ObjectId.isValid(id), {
     message: "Invalid group ID format",
   }),
@@ -59,7 +59,7 @@ export const ExpenseFormSchema = z.object({
   splits: z.array(SplitSchema).optional(),
 });
 
-export const FileSchema = z.object({
+const FileSchema = z.object({
   size: z.number().max(5 * 1024 * 1024, "File size must be less than 5MB"),
   type: z
     .enum(["image/jpeg", "image/png", "image/webp"])

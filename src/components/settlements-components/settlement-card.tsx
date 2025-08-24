@@ -6,17 +6,21 @@ import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Banknote, Clock, AlertTriangle, CheckCircle, MessageSquare, Calendar } from "lucide-react"
 
-export interface UISettlement {
+interface UISettlement {
     id: string
     type: "you_owe" | "owes_you"
     person: string
+    personId: string
     amount: number
     group: string
+    groupId: string
     description: string
+    status: "pending" | "settled" | "overdue" | "verified" | "disputed"
     dueDate: string
-    avatar: string
-    status: "pending" | "settled" | "overdue" | "verified"
     lastReminder: string | null
+    avatar: string
+    currentUserId: string
+    expenseIds?: string[]
 }
 
 interface SettlementCardProps {
@@ -40,6 +44,8 @@ export function SettlementCard({ settlement, onCashPayment }: SettlementCardProp
                 return <CheckCircle className="w-4 h-4 text-green-500" />
             case "overdue":
                 return <AlertTriangle className="w-4 h-4 text-red-500" />
+            case "disputed":
+                return <AlertTriangle className="w-4 h-4 text-orange-500" />
             default:
                 return <Clock className="w-4 h-4 text-yellow-500" />
         }
@@ -51,6 +57,10 @@ export function SettlementCard({ settlement, onCashPayment }: SettlementCardProp
                 return <Badge className="bg-green-100 text-green-800">Settled</Badge>
             case "overdue":
                 return <Badge className="bg-red-100 text-red-800">Overdue</Badge>
+            case "disputed":
+                return <Badge className="bg-orange-100 text-orange-800">Disputed</Badge>
+            case "verified":
+                return <Badge className="bg-blue-100 text-blue-800">Verified</Badge>
             default:
                 return <Badge className="bg-yellow-100 text-yellow-800">Pending</Badge>
         }

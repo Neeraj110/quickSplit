@@ -1,6 +1,6 @@
-import mongoose, { Document, Types, Schema } from "mongoose";
+import mongoose, { Document, Types, Schema, Model } from "mongoose";
 
-interface ISettlement extends Document {
+export interface ISettlement extends Document {
   groupId: Types.ObjectId;
   payerId: Types.ObjectId;
   receiverId: Types.ObjectId;
@@ -21,6 +21,21 @@ interface ISettlement extends Document {
   status: "pending" | "settled" | "overdue" | "disputed" | "verified";
   createdAt: Date;
   updatedAt: Date;
+}
+
+// Interface for static methods
+export interface ISettlementModel extends Model<ISettlement> {
+  formatAmount(settlement: ISettlement): string;
+  getDirectionFor(settlement: ISettlement, userId: string): "paid" | "received";
+  calculateBalance(
+    groupId: Types.ObjectId,
+    user1Id: Types.ObjectId,
+    user2Id: Types.ObjectId
+  ): Promise<{
+    user1PaidToUser2: number;
+    user2PaidToUser1: number;
+    netBalance: number;
+  }>;
 }
 
 const settlementSchema = new Schema<ISettlement>(
@@ -104,7 +119,7 @@ const settlementSchema = new Schema<ISettlement>(
   }
 );
 
-// Ensure payer and receiver are different
+// Validation
 settlementSchema.pre("save", function (next) {
   if (this.payerId.equals(this.receiverId)) {
     return next(new Error("Payer and receiver cannot be the same person"));
@@ -112,17 +127,16 @@ settlementSchema.pre("save", function (next) {
   next();
 });
 
-// Compound index for common queries
+// Indexes
 settlementSchema.index({ groupId: 1, payerId: 1, receiverId: 1, status: 1 });
 
-// Utility method to format amount
+// Static methods
 settlementSchema.statics.formatAmount = function (
   settlement: ISettlement
 ): string {
   return `${settlement.currency} ${settlement.amount.toFixed(2)}`;
 };
 
-// Utility method to determine settlement direction
 settlementSchema.statics.getDirectionFor = function (
   settlement: ISettlement,
   userId: string
@@ -130,63 +144,67 @@ settlementSchema.statics.getDirectionFor = function (
   return settlement.payerId.toString() === userId ? "paid" : "received";
 };
 
-// Optimized method to calculate balance between two users
 settlementSchema.statics.calculateBalance = async function (
   groupId: Types.ObjectId,
   user1Id: Types.ObjectId,
   user2Id: Types.ObjectId
-): Promise<{
-  user1PaidToUser2: number;
-  user2PaidToUser1: number;
-  netBalance: number;
-}> {
-  const [user1ToUser2, user2ToUser1] = await Promise.all([
-    this.aggregate([
-      {
-        $match: {
-          groupId,
-          payerId: user1Id,
-          receiverId: user2Id,
-          status: "settled",
+) {
+  try {
+    const [user1ToUser2, user2ToUser1] = await Promise.all([
+      this.aggregate([
+        {
+          $match: {
+            groupId: new Types.ObjectId(groupId.toString()),
+            payerId: new Types.ObjectId(user1Id.toString()),
+            receiverId: new Types.ObjectId(user2Id.toString()),
+            status: "settled",
+          },
         },
-      },
-      {
-        $group: {
-          _id: null,
-          total: { $sum: "$amount" },
+        {
+          $group: {
+            _id: null,
+            total: { $sum: "$amount" },
+          },
         },
-      },
-    ]),
-    this.aggregate([
-      {
-        $match: {
-          groupId,
-          payerId: user2Id,
-          receiverId: user1Id,
-          status: "settled",
+      ]),
+      this.aggregate([
+        {
+          $match: {
+            groupId: new Types.ObjectId(groupId.toString()),
+            payerId: new Types.ObjectId(user2Id.toString()),
+            receiverId: new Types.ObjectId(user1Id.toString()),
+            status: "settled",
+          },
         },
-      },
-      {
-        $group: {
-          _id: null,
-          total: { $sum: "$amount" },
+        {
+          $group: {
+            _id: null,
+            total: { $sum: "$amount" },
+          },
         },
-      },
-    ]),
-  ]);
+      ]),
+    ]);
 
-  const user1PaidToUser2 = user1ToUser2[0]?.total || 0;
-  const user2PaidToUser1 = user2ToUser1[0]?.total || 0;
+    const user1PaidToUser2 = user1ToUser2[0]?.total || 0;
+    const user2PaidToUser1 = user2ToUser1[0]?.total || 0;
 
-  return {
-    user1PaidToUser2,
-    user2PaidToUser1,
-    netBalance: user1PaidToUser2 - user2PaidToUser1,
-  };
+    return {
+      user1PaidToUser2,
+      user2PaidToUser1,
+      netBalance: user1PaidToUser2 - user2PaidToUser1,
+    };
+  } catch (error) {
+    console.error("Error calculating balance:", error);
+    return {
+      user1PaidToUser2: 0,
+      user2PaidToUser1: 0,
+      netBalance: 0,
+    };
+  }
 };
 
-export const Settlement =
-  mongoose.models.Settlement ||
-  mongoose.model<ISettlement>("Settlement", settlementSchema);
-
-export type { ISettlement };
+export const Settlement = (mongoose.models.Settlement ||
+  mongoose.model<ISettlement, ISettlementModel>(
+    "Settlement",
+    settlementSchema
+  )) as ISettlementModel;

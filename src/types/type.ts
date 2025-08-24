@@ -1,3 +1,5 @@
+import { Types } from "mongoose";
+
 export interface BaseDocument {
   _id: string;
   createdAt: string;
@@ -245,6 +247,22 @@ export interface FilterState {
     from: Date;
     to: Date;
   };
+}
+
+export interface PopulatedSettlement {
+  _id: string;
+  payerId: Types.ObjectId;
+  receiverId: Types.ObjectId;
+  groupId: Types.ObjectId;
+  amount: number;
+  description: string;
+  paymentMethod: string;
+  paymentDate: string;
+  notes?: string;
+  status: string;
+  expenseId: string[];
+  createdAt: string;
+  updatedAt: string;
 }
 
 export type GroupToCardData = (group: PopulatedGroup) => GroupCardData;

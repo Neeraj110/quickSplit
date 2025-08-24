@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import DashboardLayout from "@/components/DashboardLayout"
-import { SettlementCard, UISettlement } from "@/components/settlements-components/settlement-card"
+import { SettlementCard } from "@/components/settlements-components/settlement-card"
 import { SettlementModal } from "@/components/settlements-components/settlement-modal"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -27,9 +27,25 @@ interface Settlement {
     paymentDate: string
     notes?: string
     status: "pending" | "settled" | "overdue" | "disputed" | "verified"
-
     createdAt: string
     updatedAt: string
+}
+
+interface UISettlement {
+    id: string
+    type: "you_owe" | "owes_you"
+    person: string
+    personId: string
+    amount: number
+    group: string
+    groupId: string
+    description: string
+    status: "pending" | "settled" | "overdue" | "verified" | "disputed"
+    dueDate: string
+    lastReminder: string | null
+    avatar: string
+    currentUserId: string
+    expenseIds?: string[]
 }
 
 interface OutstandingBalance {
@@ -80,7 +96,7 @@ export default function SettlePage() {
 
             const data = await response.json()
             console.log('Fetched settlements:', data);
-            
+
             setSettlementData(data)
         } catch (error) {
             console.error('Error fetching settlements:', error)
@@ -116,7 +132,7 @@ export default function SettlePage() {
         })),
         ...settlementData.settlements.map(settlement => ({
             id: settlement._id,
-            type: settlement.type === "you_paid" ? "you_owe" : "owes_you",
+            type: (settlement.type === "you_paid" ? "you_owe" : "owes_you") as "you_owe" | "owes_you",
             person: settlement.person,
             personId: settlement.personId,
             amount: settlement.amount,

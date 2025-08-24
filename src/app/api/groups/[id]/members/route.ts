@@ -6,7 +6,6 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { Types } from "mongoose";
 import { z } from "zod";
-import { io } from "@/lib/socket";
 
 const removeMembersSchema = z.object({
   userIds: z
@@ -135,15 +134,7 @@ export async function POST(
       .populate("admin", "name email")
       .populate("expenses")
       .lean();
-    io.to(`group-${id}`).emit("member_added", {
-      groupId: id,
-      newMembers: newMembers.map((m) => ({
-        id: m._id,
-        name: m.name,
-        email: m.email,
-      })),
-      message: `${newMembers.length} new member(s) added to group`,
-    });
+
     return NextResponse.json(
       {
         message: "Members added successfully",
@@ -244,16 +235,6 @@ export async function DELETE(
     const removedUsers = await User.find({
       _id: { $in: validUserIds },
     }).select("name email");
-
-    io.to(`group-${id}`).emit("members_removed", {
-      groupId: id,
-      removedUsers: removedUsers.map((u) => ({
-        id: u._id,
-        name: u.name,
-        email: u.email,
-      })),
-      message: `${removedUsers.length} member(s) removed from group`,
-    });
 
     const updatedGroup = await Group.findById(id)
       .populate("members", "name email")
