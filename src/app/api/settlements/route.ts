@@ -206,7 +206,6 @@ export async function POST(req: NextRequest) {
       });
 
       await settlement.save({ session: dbSession });
-
       if (settlementData.expenseIds && settlementData.expenseIds.length > 0) {
         let remainingAmount = settlementData.amount;
 
@@ -217,7 +216,6 @@ export async function POST(req: NextRequest) {
           if (!expense) continue;
 
           expense.splits = expense.splits.map((split: ISplit) => {
-            // Reduce the payer's split (the one who owes and is now paying)
             if (
               split.userId.toString() === settlementData.payerId.toString() &&
               remainingAmount > 0
@@ -232,7 +230,6 @@ export async function POST(req: NextRequest) {
           await expense.save({ session: dbSession });
         }
       }
-
       createdSettlement = settlement;
     });
 
@@ -240,7 +237,6 @@ export async function POST(req: NextRequest) {
       throw new Error("Settlement creation failed");
     }
 
-    // Populate settlement data for response
     const populatedSettlement = await Settlement.findById(createdSettlement._id)
       .populate("payerId", "name email")
       .populate("receiverId", "name email")
@@ -367,8 +363,6 @@ export async function GET(req: NextRequest) {
         const expenses = await Expense.find({ groupId: group._id }).lean();
         let user1OwesUser2 = 0;
         for (const expense of expenses) {
-          // Fixed: Check if your Expense model uses 'payerId' or 'paidBy'
-          // Use the correct field name from your Expense model
           const payerId =
             expense.payerId?.toString() || expense.paidBy?.toString();
           if (!payerId) continue;
@@ -398,8 +392,7 @@ export async function GET(req: NextRequest) {
         if (Math.abs(balance) > 0.01) {
           const relatedExpenses = expenses
             .filter((expense) => {
-              const payerId =
-                expense.payerId?.toString() || expense.paidBy?.toString();
+              const payerId = expense.payerId?.toString();
               return (
                 payerId === currentUser._id.toString() ||
                 payerId === memberId.toString()
