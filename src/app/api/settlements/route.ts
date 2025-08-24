@@ -61,7 +61,6 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json();
     const settlementData = SettlementSchema.parse(body);
-    console.log("Creating settlement with data:", settlementData);
 
     // Verify users and group exist
     const [payer, receiver, group] = await Promise.all([
