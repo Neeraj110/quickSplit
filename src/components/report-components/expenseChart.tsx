@@ -22,9 +22,9 @@ export function ExpenseChart({ data }: ExpenseChartProps) {
   if (!data || data.length === 0) {
     return (
       <Card>
-        <CardHeader>
-          <CardTitle className="text-base sm:text-lg">Monthly Expenses</CardTitle>
-          <CardDescription className="text-xs sm:text-sm">
+        <CardHeader className="p-3 sm:p-4">
+          <CardTitle className="text-sm sm:text-lg">Monthly Expenses</CardTitle>
+          <CardDescription className="text-xs">
             No data available
           </CardDescription>
         </CardHeader>
@@ -34,13 +34,13 @@ export function ExpenseChart({ data }: ExpenseChartProps) {
 
   return (
     <Card>
-      <CardHeader className="p-4">
-        <CardTitle className="text-base sm:text-lg">Monthly Expenses</CardTitle>
-        <CardDescription className="text-xs sm:text-sm">
+      <CardHeader className="p-3 sm:p-4">
+        <CardTitle className="text-sm sm:text-lg">Monthly Expenses</CardTitle>
+        <CardDescription className="text-xs">
           Your spending over the last 6 months
         </CardDescription>
       </CardHeader>
-      <CardContent className="p-4">
+      <CardContent className="p-3 sm:p-4">
         <ChartContainer
           config={{
             total: {
@@ -48,18 +48,29 @@ export function ExpenseChart({ data }: ExpenseChartProps) {
               color: "hsl(var(--chart-1))",
             },
           }}
-          className="h-[200px] sm:h-[300px]"
+          className="h-[150px] sm:h-[300px]"
         >
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={data} margin={{ top: 5, right: 5, left: -10, bottom: 5 }}>
+            <BarChart
+              data={data}
+              margin={{ top: 5, right: 5, left: -20, bottom: 0 }}
+              barSize={20}
+            >
               <XAxis
                 dataKey="month"
-                fontSize={12}
+                fontSize={10}
                 tickLine={false}
                 axisLine={false}
                 interval="preserveStartEnd"
+                tickFormatter={(value) => value.slice(0, 3)} // Abbreviate month names
               />
-              <YAxis fontSize={12} tickLine={false} axisLine={false} width={40} />
+              <YAxis
+                fontSize={10}
+                tickLine={false}
+                axisLine={false}
+                width={30}
+                tickFormatter={(value) => `$${value}`}
+              />
               <ChartTooltip content={<ChartTooltipContent />} />
               <Bar dataKey="total" fill="var(--color-amount)" radius={4} />
             </BarChart>

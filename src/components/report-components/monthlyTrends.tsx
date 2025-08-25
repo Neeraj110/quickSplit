@@ -19,13 +19,27 @@ interface MonthlyTrendsProps {
 }
 
 export function MonthlyTrends({ data }: MonthlyTrendsProps) {
-  if (!data || data.length === 0) {
+  // Filter and sort data to show only the last 3 months
+  const filteredData = data
+    .map((item) => ({
+      ...item,
+      date: new Date(item.month), // Assuming month is a parseable date string
+    }))
+    .sort((a, b) => b.date.getTime() - a.date.getTime()) // Sort descending by date
+    .slice(0, 3) // Take the most recent 3 months
+    .map((item) => ({
+      month: item.month,
+      total: item.total,
+      expenses: item.expenses,
+    }));
+
+  if (!filteredData || filteredData.length === 0) {
     return (
       <Card>
-        <CardHeader className="p-4">
-          <CardTitle className="text-base sm:text-lg">Monthly Trends</CardTitle>
-          <CardDescription className="text-xs sm:text-sm">
-            No data available
+        <CardHeader className="p-3 sm:p-4">
+          <CardTitle className="text-sm sm:text-lg">Monthly Trends</CardTitle>
+          <CardDescription className="text-xs">
+            No data available for the last 3 months
           </CardDescription>
         </CardHeader>
       </Card>
@@ -34,13 +48,13 @@ export function MonthlyTrends({ data }: MonthlyTrendsProps) {
 
   return (
     <Card>
-      <CardHeader className="p-4">
-        <CardTitle className="text-base sm:text-lg">Monthly Trends</CardTitle>
-        <CardDescription className="text-xs sm:text-sm">
-          Track your expense patterns over time
+      <CardHeader className="p-3 sm:p-4">
+        <CardTitle className="text-sm sm:text-lg">Monthly Trends</CardTitle>
+        <CardDescription className="text-xs">
+          Track your expense patterns over the last 3 months
         </CardDescription>
       </CardHeader>
-      <CardContent className="p-4">
+      <CardContent className="p-3 sm:p-4">
         <ChartContainer
           config={{
             total: {
@@ -52,31 +66,38 @@ export function MonthlyTrends({ data }: MonthlyTrendsProps) {
               color: "hsl(var(--chart-2))",
             },
           }}
-          className="h-[250px] sm:h-[400px]"
+          className="h-[120px] sm:h-[300px]"
         >
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={data} margin={{ top: 5, right: 5, left: -10, bottom: 5 }}>
+            <LineChart
+              data={filteredData}
+              margin={{ top: 5, right: 5, left: -25, bottom: 0 }}
+            >
               <XAxis
                 dataKey="month"
-                fontSize={12}
+                fontSize={10}
                 tickLine={false}
                 axisLine={false}
-                interval="preserveStartEnd"
+                interval={0} // Show all 3 months
+                tickFormatter={(value) => value.slice(0, 3)} // Abbreviate month names
               />
               <YAxis
                 yAxisId="left"
-                fontSize={12}
+                fontSize={10}
                 tickLine={false}
                 axisLine={false}
-                width={40}
+                width={25}
+                tickFormatter={(value) => `₹${value}`}
               />
               <YAxis
                 yAxisId="right"
-                fontSize={12}
+                fontSize={10}
                 tickLine={false}
                 axisLine={false}
-                width={40}
+                width={25}
                 orientation="right"
+                className="hidden sm:block" // Hide right Y-axis on mobile
+                tickFormatter={(value) => `${value}`}
               />
               <ChartTooltip content={<ChartTooltipContent />} />
               <Line
@@ -84,7 +105,7 @@ export function MonthlyTrends({ data }: MonthlyTrendsProps) {
                 type="monotone"
                 dataKey="total"
                 stroke="var(--color-total)"
-                strokeWidth={2}
+                strokeWidth={1.5}
                 dot={{ fill: "var(--color-total)", strokeWidth: 1, r: 3 }}
               />
               <Line
@@ -92,8 +113,9 @@ export function MonthlyTrends({ data }: MonthlyTrendsProps) {
                 type="monotone"
                 dataKey="expenses"
                 stroke="var(--color-expenses)"
-                strokeWidth={2}
+                strokeWidth={1.5}
                 dot={{ fill: "var(--color-expenses)", strokeWidth: 1, r: 3 }}
+                className="hidden sm:block" // Hide expenses line on mobile
               />
             </LineChart>
           </ResponsiveContainer>

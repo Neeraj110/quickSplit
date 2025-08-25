@@ -36,8 +36,6 @@ export function SettlementCard({ settlement, onCashPayment }: SettlementCardProp
         (1000 * 3600 * 24)
     )
 
-
-
     const getStatusIcon = () => {
         switch (settlement.status) {
             case "settled":
@@ -67,29 +65,35 @@ export function SettlementCard({ settlement, onCashPayment }: SettlementCardProp
     }
 
     return (
-        <Card className={`transition-all hover:shadow-md ${isOverdue ? "" : ""}`}>
-            <CardContent className="p-6">
-                <div className="flex items-start justify-between">
+        <Card className="transition-all hover:shadow-md w-full">
+            <CardContent className="p-4 sm:p-6">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                     {/* Left side */}
-                    <div className="flex items-start gap-4 flex-1">
-                        <Avatar className="w-12 h-12">
+                    <div className="flex items-start gap-3 flex-1">
+                        <Avatar className="w-10 h-10 sm:w-12 sm:h-12">
                             <AvatarImage src={settlement.avatar || "/placeholder.svg"} />
                             <AvatarFallback>{settlement.person.charAt(0)}</AvatarFallback>
                         </Avatar>
 
                         <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
-                                <h3 className="font-semibold text-lg">{settlement.person}</h3>
-                                {getStatusIcon()}
-                                {getStatusBadge()}
+                            <div className="flex flex-wrap items-center gap-2 mb-1">
+                                <h3 className="font-semibold text-base sm:text-lg truncate max-w-[150px] sm:max-w-none">
+                                    {settlement.person}
+                                </h3>
+                                <div className="flex items-center gap-2">
+                                    {getStatusIcon()}
+                                    {getStatusBadge()}
+                                </div>
                             </div>
 
-                            <p className="text-sm text-muted-foreground mb-2">
+                            <p className="text-xs sm:text-sm text-muted-foreground mb-2 truncate">
                                 {settlement.group}
                             </p>
-                            <p className="text-sm mb-3">{settlement.description}</p>
+                            <p className="text-xs sm:text-sm mb-3 line-clamp-2">
+                                {settlement.description}
+                            </p>
 
-                            <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-xs text-muted-foreground">
                                 <div className="flex items-center gap-1">
                                     <Calendar className="w-3 h-3" />
                                     Due: {new Date(settlement.dueDate).toLocaleDateString()}
@@ -111,10 +115,10 @@ export function SettlementCard({ settlement, onCashPayment }: SettlementCardProp
                     </div>
 
                     {/* Right side */}
-                    <div className="flex flex-col items-end gap-3 ml-4">
+                    <div className="flex flex-col items-end gap-2 sm:ml-4">
                         <div className="text-right">
                             <div
-                                className={`text-2xl font-bold ${settlement.type === "you_owe"
+                                className={`text-xl sm:text-2xl font-bold ${settlement.type === "you_owe"
                                     ? "text-red-600"
                                     : "text-green-600"
                                     }`}
@@ -127,19 +131,29 @@ export function SettlementCard({ settlement, onCashPayment }: SettlementCardProp
                         </div>
 
                         {settlement.status !== "settled" && settlement.type === "you_owe" && (
-                            <Button size="sm" variant="outline" onClick={() => onCashPayment(settlement)}>
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                className="w-full sm:w-auto"
+                                onClick={() => onCashPayment(settlement)}
+                            >
                                 <Banknote className="w-4 h-4 mr-2" />
                                 Mark as Pay
                             </Button>
                         )}
 
                         {settlement.status !== "settled" && settlement.type === "owes_you" && (
-                            <div className="flex flex-col gap-2">
-                                <Button size="sm" variant="outline">
+                            <div className="flex flex-col gap-2 w-full sm:w-auto">
+                                <Button size="sm" variant="outline" className="w-full sm:w-auto">
                                     <MessageSquare className="w-4 h-4 mr-2" />
                                     Send Reminder
                                 </Button>
-                                <Button size="sm" variant="outline" onClick={() => onCashPayment(settlement)}>
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="w-full sm:w-auto"
+                                    onClick={() => onCashPayment(settlement)}
+                                >
                                     <Banknote className="w-4 h-4 mr-2" />
                                     Mark as Paid
                                 </Button>

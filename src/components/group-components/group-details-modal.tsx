@@ -228,7 +228,7 @@ export function GroupDetailsModal({
                   </div>
 
                   {!editMode && (
-                    <div className="flex gap-2 ml-4">
+                    <div className="flex gap-2 ml-4 sm:flex-row flex-col">
                       <Button
                         variant="outline"
                         size="sm"

@@ -20,7 +20,7 @@ interface ReportResponse {
   totalExpenses: number; // number of expenses user is part of
   totalSpent: number; // user ka actual kharcha
   avgExpense: number; // user ka avg
-  totalGroups: number; // groups joined
+  totalGroups: number; 
   categoryBreakdown: CategoryData[];
   monthlyBreakdown: MonthlyData[];
 }
@@ -129,7 +129,8 @@ function generateMonthlyBreakdown(
   const monthlyData: MonthlyData[] = [];
   const now = new Date();
 
-  for (let i = 5; i >= 0; i--) {
+  for (let i = 2; i >= 0; i--) {
+    
     const monthDate = new Date(now.getFullYear(), now.getMonth() - i, 1);
     const monthKey = monthDate.toLocaleString("default", {
       month: "short",
@@ -166,7 +167,7 @@ function generateEmptyMonthlyBreakdown(): MonthlyData[] {
   const monthlyData: MonthlyData[] = [];
   const now = new Date();
 
-  for (let i = 5; i >= 0; i--) {
+  for (let i = 4; i >= 0; i--) {
     const monthDate = new Date(now.getFullYear(), now.getMonth() - i, 1);
     const monthKey = monthDate.toLocaleString("default", {
       month: "short",

@@ -83,7 +83,6 @@ export default function SettlePage() {
     const [loading, setLoading] = useState(true)
     const [refreshing, setRefreshing] = useState(false)
 
-
     const fetchSettlements = async (showRefreshLoader = false) => {
         try {
             if (showRefreshLoader) setRefreshing(true)
@@ -175,10 +174,10 @@ export default function SettlePage() {
     if (loading) {
         return (
             <DashboardLayout>
-                <div className="flex items-center justify-center min-h-[400px]">
+                <div className="flex items-center justify-center min-h-[400px] px-4">
                     <div className="text-center">
                         <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
-                        <p className="text-muted-foreground">Loading settlement data...</p>
+                        <p className="text-sm text-muted-foreground">Loading settlement data...</p>
                     </div>
                 </div>
             </DashboardLayout>
@@ -187,17 +186,18 @@ export default function SettlePage() {
 
     return (
         <DashboardLayout>
-            <div className="space-y-6 px-8 py-5">
-                <div className="flex items-center justify-between">
+            <div className="space-y-4 px-4 sm:px-6 py-4">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
-                        <h1 className="text-3xl font-bold tracking-tight">Settle Up</h1>
-                        <p className="text-muted-foreground">Manage your payments and settle outstanding balances</p>
+                        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Settle Up</h1>
+                        <p className="text-sm text-muted-foreground">Manage your payments and settle outstanding balances</p>
                     </div>
                     <Button
                         onClick={() => fetchSettlements(true)}
                         disabled={refreshing}
                         variant="outline"
                         size="sm"
+                        className="w-full sm:w-auto min-w-[100px]"
                     >
                         <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
                         Refresh
@@ -205,14 +205,14 @@ export default function SettlePage() {
                 </div>
 
                 {/* Summary Cards */}
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">You Owe</CardTitle>
                             <TrendingDown className="h-4 w-4 text-red-500" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold text-red-600">
+                            <div className="text-xl sm:text-2xl font-bold text-red-600">
                                 ${settlementData.summary.totalOwing.toFixed(2)}
                             </div>
                             <p className="text-xs text-muted-foreground">Total outstanding debt</p>
@@ -225,7 +225,7 @@ export default function SettlePage() {
                             <TrendingUp className="h-4 w-4 text-green-500" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold text-green-600">
+                            <div className="text-xl sm:text-2xl font-bold text-green-600">
                                 ${settlementData.summary.totalOwed.toFixed(2)}
                             </div>
                             <p className="text-xs text-muted-foreground">Total amount to collect</p>
@@ -238,7 +238,7 @@ export default function SettlePage() {
                             <Clock className="h-4 w-4 text-yellow-500" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold text-yellow-600">{pendingCount}</div>
+                            <div className="text-xl sm:text-2xl font-bold text-yellow-600">{pendingCount}</div>
                             <p className="text-xs text-muted-foreground">Awaiting settlement</p>
                         </CardContent>
                     </Card>
@@ -249,7 +249,7 @@ export default function SettlePage() {
                             <CheckCircle className="h-4 w-4 text-green-500" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold text-green-600">
+                            <div className="text-xl sm:text-2xl font-bold text-green-600">
                                 {settlementData.summary.settledCount}
                             </div>
                             <p className="text-xs text-muted-foreground">Completed payments</p>
@@ -260,61 +260,63 @@ export default function SettlePage() {
                 {/* Filters and Search */}
                 <Card>
                     <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            <Filter className="w-5 h-5" />
+                        <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                            <Filter className="w-4 h-4 sm:w-5 sm:h-5" />
                             Filter Settlements
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="flex flex-col sm:flex-row gap-4">
-                            <div className="flex-1">
-                                <div className="relative">
-                                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                                    <Input
-                                        placeholder="Search by person, group, or description..."
-                                        value={searchTerm}
-                                        onChange={(e) => setSearchTerm(e.target.value)}
-                                        className="pl-10"
-                                    />
-                                </div>
+                        <div className="flex flex-col gap-3">
+                            <div className="relative">
+                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                                <Input
+                                    placeholder="Search by person, group, or description..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    className="pl-10 text-sm"
+                                />
                             </div>
-                            <Select value={statusFilter} onValueChange={setStatusFilter}>
-                                <SelectTrigger className="w-full sm:w-[180px]">
-                                    <SelectValue placeholder="Filter by status" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="all">All Status</SelectItem>
-                                    <SelectItem value="pending">Pending</SelectItem>
-                                    <SelectItem value="settled">Settled</SelectItem>
-                                    <SelectItem value="overdue">Overdue</SelectItem>
-                                    <SelectItem value="verified">Verified</SelectItem>
-                                </SelectContent>
-                            </Select>
-                            <Select value={typeFilter} onValueChange={setTypeFilter}>
-                                <SelectTrigger className="w-full sm:w-[180px]">
-                                    <SelectValue placeholder="Filter by type" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="all">All Types</SelectItem>
-                                    <SelectItem value="you_owe">You Owe</SelectItem>
-                                    <SelectItem value="owes_you">Owes You</SelectItem>
-                                </SelectContent>
-                            </Select>
+                            <div className="flex flex-col sm:flex-row gap-3">
+                                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                                    <SelectTrigger className="w-full text-sm">
+                                        <SelectValue placeholder="Filter by status" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">All Status</SelectItem>
+                                        <SelectItem value="pending">Pending</SelectItem>
+                                        <SelectItem value="settled">Settled</SelectItem>
+                                        <SelectItem value="overdue">Overdue</SelectItem>
+                                        <SelectItem value="verified">Verified</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <Select value={typeFilter} onValueChange={setTypeFilter}>
+                                    <SelectTrigger className="w-full text-sm">
+                                        <SelectValue placeholder="Filter by type" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">All Types</SelectItem>
+                                        <SelectItem value="you_owe">You Owe</SelectItem>
+                                        <SelectItem value="owes_you">Owes You</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
                         </div>
                     </CardContent>
                 </Card>
 
                 {/* Settlements Tabs */}
                 <Tabs defaultValue="all" className="space-y-4">
-                    <TabsList className="grid w-full grid-cols-4">
-                        <TabsTrigger value="all">All ({filteredItems.length})</TabsTrigger>
-                        <TabsTrigger value="you_owe">
+                    <TabsList className="flex overflow-x-auto w-full">
+                        <TabsTrigger value="all" className="flex-1 min-w-[80px] text-xs sm:text-sm">
+                            All ({filteredItems.length})
+                        </TabsTrigger>
+                        <TabsTrigger value="you_owe" className="flex-1 min-w-[80px] text-xs sm:text-sm">
                             You Owe ({filteredItems.filter((s) => s.type === "you_owe" && s.status !== "settled").length})
                         </TabsTrigger>
-                        <TabsTrigger value="owes_you">
+                        <TabsTrigger value="owes_you" className="flex-1 min-w-[80px] text-xs sm:text-sm">
                             Owes You ({filteredItems.filter((s) => s.type === "owes_you" && s.status !== "settled").length})
                         </TabsTrigger>
-                        <TabsTrigger value="settled">
+                        <TabsTrigger value="settled" className="flex-1 min-w-[80px] text-xs sm:text-sm">
                             Settled ({filteredItems.filter((s) => s.status === "settled").length})
                         </TabsTrigger>
                     </TabsList>
@@ -322,10 +324,10 @@ export default function SettlePage() {
                     <TabsContent value="all" className="space-y-4">
                         {filteredItems.length === 0 ? (
                             <Card>
-                                <CardContent className="flex flex-col items-center justify-center py-12">
-                                    <CheckCircle className="w-12 h-12 text-muted-foreground mb-4" />
-                                    <h3 className="text-lg font-semibold mb-2">No settlements found</h3>
-                                    <p className="text-muted-foreground text-center">
+                                <CardContent className="flex flex-col items-center justify-center py-8 sm:py-12">
+                                    <CheckCircle className="w-10 h-10 sm:w-12 sm:h-12 text-muted-foreground mb-4" />
+                                    <h3 className="text-base sm:text-lg font-semibold mb-2">No settlements found</h3>
+                                    <p className="text-sm text-muted-foreground text-center">
                                         {searchTerm || statusFilter !== "all" || typeFilter !== "all"
                                             ? "Try adjusting your filters to see more results."
                                             : "All your balances are settled up!"}
@@ -397,4 +399,4 @@ export default function SettlePage() {
             </div>
         </DashboardLayout>
     )
-}
+} 
