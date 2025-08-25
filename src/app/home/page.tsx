@@ -209,7 +209,7 @@ export default function HomePage() {
 
             <div className="flex items-center space-x-3 ml-5">
               <ToggleTheme />
-              <Link href="/signin">
+              <Link href="/signin" className="hidden sm:inline-block">
                 <Button variant="ghost" size="sm" className="text-sm h-10">
                   Sign In
                 </Button>
