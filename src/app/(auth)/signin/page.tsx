@@ -37,7 +37,6 @@ type SignInFormData = z.infer<typeof signInSchema>;
 
 export default function SignInPage() {
   const router = useRouter();
-
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -48,6 +47,7 @@ export default function SignInPage() {
       password: "",
     },
   });
+
   const onSubmit = async (data: SignInFormData) => {
     try {
       setIsLoading(true);
@@ -84,17 +84,19 @@ export default function SignInPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center ">
+    <div className="min-h-screen flex items-center justify-center p-4 sm:p-6">
       <div className="w-full max-w-md space-y-6">
         <div className="text-center space-y-2">
-          <h1 className="text-2xl font-bold">Welcome Back</h1>
-          <p className="text-muted-foreground">Sign in to your account</p>
+          <h1 className="text-2xl sm:text-3xl font-bold">Welcome Back</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">
+            Sign in to your account
+          </p>
         </div>
 
         <Card className="border border-gray-200 shadow-md">
           <CardHeader className="space-y-1">
-            <CardTitle className="text-xl">Sign in</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-lg sm:text-xl">Sign in</CardTitle>
+            <CardDescription className="text-sm">
               Enter your email and password to access your account
             </CardDescription>
           </CardHeader>
@@ -110,19 +112,19 @@ export default function SignInPage() {
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Email</FormLabel>
+                      <FormLabel className="text-sm sm:text-base">Email</FormLabel>
                       <FormControl>
                         <div className="relative">
-                          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-5 h-5" />
                           <Input
                             placeholder="john@example.com"
                             {...field}
-                            className="pl-10"
+                            className="pl-11 h-12 text-sm sm:text-base"
+                            aria-label="Email address"
                           />
                         </div>
                       </FormControl>
-
-                      <FormMessage />
+                      <FormMessage className="text-xs sm:text-sm" />
                     </FormItem>
                   )}
                 />
@@ -132,41 +134,42 @@ export default function SignInPage() {
                   name="password"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Password</FormLabel>
+                      <FormLabel className="text-sm sm:text-base">Password</FormLabel>
                       <FormControl>
                         <div className="relative">
-                          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-5 h-5" />
                           <Input
                             type={showPassword ? "text" : "password"}
                             placeholder="Enter your password"
                             {...field}
-                            className="pl-10 pr-10"
+                            className="pl-11 pr-12 h-12 text-sm sm:text-base"
+                            aria-label="Password"
                           />
                           <Button
                             type="button"
                             variant="ghost"
                             size="icon"
-                            className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                            className="absolute right-0 top-0 h-full px-3 hover:bg-transparent focus:ring-2 focus:ring-green-600"
                             onClick={() => setShowPassword(!showPassword)}
+                            aria-label={showPassword ? "Hide password" : "Show password"}
                           >
                             {showPassword ? (
-                              <EyeOff className="w-4 h-4 text-muted-foreground" />
+                              <EyeOff className="w-5 h-5 text-muted-foreground" />
                             ) : (
-                              <Eye className="w-4 h-4 text-muted-foreground" />
+                              <Eye className="w-5 h-5 text-muted-foreground" />
                             )}
                           </Button>
                         </div>
                       </FormControl>
-
-                      <FormMessage />
+                      <FormMessage className="text-xs sm:text-sm" />
                     </FormItem>
                   )}
                 />
 
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-end">
                   <Link
                     href="/forgot-password"
-                    className="text-sm text-green-600 hover:underline"
+                    className="text-xs sm:text-sm text-green-600 hover:underline"
                   >
                     Forgot password?
                   </Link>
@@ -174,12 +177,12 @@ export default function SignInPage() {
 
                 <Button
                   type="submit"
-                  className="w-full bg-green-600 hover:bg-green-700 text-white"
+                  className="w-full bg-green-600 hover:bg-green-700 text-white h-12 text-sm sm:text-base"
                   disabled={isLoading}
                 >
                   {isLoading ? (
                     <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2" />
                       Signing in...
                     </>
                   ) : (
@@ -189,31 +192,28 @@ export default function SignInPage() {
               </form>
             </Form>
 
-            {/* ✅ Divider */}
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
                 <Separator />
               </div>
-              <div className="relative flex justify-center text-xs uppercase">
+              <div className="relative flex justify-center text-xs sm:text-sm uppercase">
                 <span className="bg-background px-2 text-muted-foreground">
                   Or continue with
                 </span>
               </div>
             </div>
 
-            {/* ✅ OAuth Buttons */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="flex flex-col gap-3">
               <Button
                 variant="outline"
-                className="w-full"
+                className="w-full h-12 text-sm sm:text-base"
                 onClick={() => handleOAuthSignIn("google")}
               >
                 Google
               </Button>
-
               <Button
                 variant="outline"
-                className="w-full"
+                className="w-full h-12 text-sm sm:text-base"
                 onClick={() => handleOAuthSignIn("github")}
               >
                 GitHub
@@ -222,11 +222,10 @@ export default function SignInPage() {
           </CardContent>
         </Card>
 
-        {/* ✅ Sign up link */}
-        <div className="text-center text-sm">
+        <div className="text-center text-xs sm:text-sm">
           <span className="text-muted-foreground">Don’t have an account? </span>
           <Link
-            href="/register"
+            href="/signup"
             className="text-green-600 hover:underline font-medium"
           >
             Sign up
