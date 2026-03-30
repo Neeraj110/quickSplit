@@ -19,10 +19,10 @@ export default function HomePage() {
   }, [status, router]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center">
-      <div className="flex items-center space-x-2">
-        <Loader2 className="h-6 w-6 animate-spin" />
-        <p className="text-lg">Redirecting...</p>
+    <div className="flex min-h-screen items-center justify-center bg-background" suppressHydrationWarning>
+      <div className="flex items-center space-x-2" suppressHydrationWarning>
+        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        <p className="text-lg text-on-surface">Redirecting...</p>
       </div>
     </div>
   );
