@@ -1,118 +1,112 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { MoreHorizontal, Eye } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { PopulatedExpense } from "@/types/type";
 import Link from "next/link";
+import { useSelector } from "react-redux";
+import { RootState } from "@/redux/store";
 
 interface RecentExpensesProps {
   expenses: PopulatedExpense[];
 }
 
-const categoryColors: Record<string, string> = {
-  Food: "bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400",
-  Transport: "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400",
-  Entertainment:
-    "bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400",
-  Utilities:
-    "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400",
-  General: "bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400",
+const categoryIcons: Record<string, string> = {
+  Food: "🍽️",
+  Transport: "🚗",
+  Entertainment: "🎬",
+  Utilities: "⚡",
+  Shopping: "🛒",
+  General: "📦",
+  Accommodation: "🏨",
+  Travel: "✈️",
 };
 
 export function RecentExpenses({ expenses }: RecentExpensesProps) {
+  const { user } = useSelector((state: RootState) => state.user);
+  const currentUserId = user?._id;
+
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle>Recent Expenses</CardTitle>
-          <Link href={"/expenses/recent"}>
-            <Button variant="outline" size="sm">
-              <Eye className="w-4 h-4 mr-2" />
-              View All
-            </Button>
-          </Link>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Description</TableHead>
-              <TableHead>Amount</TableHead>
-              <TableHead>Paid By</TableHead>
-              <TableHead>Group</TableHead>
-              <TableHead>Date</TableHead>
-              <TableHead className="w-[50px]"></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {expenses.map((expense) => (
-              <TableRow key={expense._id}>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium">{expense.description}</span>
-                    <Badge
-                      variant="secondary"
-                      className={`text-xs ${
-                        categoryColors[expense.category] ||
-                        categoryColors.General
-                      }`}
-                    >
-                      {expense.category}
-                    </Badge>
+    <div>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-lg font-bold text-on-surface">Recent Activity</h2>
+        <Link href={"/expenses/recent"} className="text-sm font-semibold text-primary hover:underline">
+          View All
+        </Link>
+      </div>
+      <div className="flex flex-col gap-3">
+        {expenses.length === 0 ? (
+          <Card className="border-none shadow-ambient bg-surface-bright">
+            <CardContent className="text-center py-8">
+              <p className="text-muted-foreground text-sm">No recent activity found.</p>
+            </CardContent>
+          </Card>
+        ) : (
+          expenses.slice(0, 5).map((expense) => {
+            const isPayer = expense.paidBy._id === currentUserId;
+            const userSplit = expense.splits?.find(s => s.userId === currentUserId);
+            const userShare = userSplit?.amount || 0;
+
+            // Determine accent bar color and status text
+            let accentColor = "bg-primary"; // green = you get back
+            let statusText = "";
+            let statusColor = "text-primary";
+
+            if (isPayer) {
+              const othersOwe = expense.amount - userShare;
+              if (othersOwe > 0.01) {
+                statusText = `You get back ${expense.currency} ${othersOwe.toFixed(2)}`;
+                accentColor = "bg-primary";
+                statusColor = "text-primary";
+              }
+            } else {
+              if (userShare > 0.01) {
+                statusText = `You owe ${expense.currency} ${userShare.toFixed(2)}`;
+                accentColor = "bg-tertiary";
+                statusColor = "text-tertiary";
+              }
+            }
+
+            const icon = categoryIcons[expense.category] || categoryIcons.General;
+
+            return (
+              <div
+                key={expense._id}
+                className="bg-surface-bright rounded-2xl p-5 shadow-ambient relative overflow-hidden transition-all hover:-translate-y-0.5 hover:shadow-lg"
+              >
+                {/* Left accent bar per DESIGN.md */}
+                <div className={`absolute left-0 top-0 bottom-0 w-1 rounded-r-full ${accentColor}`} />
+                
+                <div className="flex items-start justify-between pl-3">
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-surface-container-high flex items-center justify-center shrink-0 text-lg">
+                      {icon}
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="font-bold text-on-surface text-base leading-tight">
+                        {expense.description}
+                      </span>
+                      <span className="text-xs text-muted-foreground mt-1">
+                        Paid by <strong className="text-on-surface">{isPayer ? "You" : expense.paidBy.name}</strong> • {new Date(expense.createdAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                      </span>
+                    </div>
                   </div>
-                </TableCell>
-                <TableCell className="font-semibold">
-                  {expense.currency} {expense.amount.toFixed(2)}
-                </TableCell>
-                <TableCell>
-                  <span className="font-medium text-green-600">
-                    {expense.paidBy.name || "Unknown"}
-                  </span>
-                </TableCell>
-                <TableCell>
-                  <Badge variant="outline">{expense?.groupName || ""}</Badge>
-                </TableCell>
-                <TableCell className="text-muted-foreground">
-                  {new Date(expense.createdAt).toLocaleDateString()}
-                </TableCell>
-                <TableCell>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem>View Details</DropdownMenuItem>
-                      <DropdownMenuItem>Edit Expense</DropdownMenuItem>
-                      <DropdownMenuItem className="text-red-600">
-                        Delete Expense
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </CardContent>
-    </Card>
+                  
+                  <div className="flex flex-col items-end text-right shrink-0 ml-4">
+                    <span className="font-bold text-lg text-on-surface">
+                      {expense.currency} {expense.amount.toFixed(2)}
+                    </span>
+                    {statusText && (
+                      <span className={`text-[11px] font-bold tracking-wide uppercase mt-0.5 ${statusColor}`}>
+                        {statusText}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+    </div>
   );
 }

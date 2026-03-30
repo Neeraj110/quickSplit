@@ -131,7 +131,7 @@ export default function SettlePage() {
         })),
         ...settlementData.settlements.map(settlement => ({
             id: settlement._id,
-            type: (settlement.type === "you_paid" ? "you_owe" : "owes_you") as "you_owe" | "owes_you",
+            type: (settlement.type === "you_paid" ? "owes_you" : "you_owe") as "you_owe" | "owes_you",
             person: settlement.person,
             personId: settlement.personId,
             amount: settlement.amount,

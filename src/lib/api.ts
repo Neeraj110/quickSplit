@@ -199,6 +199,19 @@ export async function fetchGroups(): Promise<PopulatedGroup[]> {
   }
 }
 
+export async function fetchSettlements() {
+  try {
+    const response = await fetch("/api/settlements");
+    if (!response.ok) {
+      throw new Error("Failed to fetch settlements");
+    }
+    return await response.json();
+  } catch (error) {
+    console.error("Error fetching settlements:", error);
+    return { settlements: [], outstandingBalances: [], summary: {} };
+  }
+}
+
 export async function fetchUserProfile() {
   try {
     const response = await fetch("/api/user");

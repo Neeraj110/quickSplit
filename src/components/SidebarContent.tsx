@@ -13,9 +13,14 @@ function SidebarContent({
   onClose?: () => void;
 }) {
   return (
-    <div className="flex grow flex-col gap-y-5 overflow-y-auto border-r transition-transform duration-300">
-      <div className="flex h-16 shrink-0 items-center justify-between px-6 ">
-        <h1 className="text-xl font-bold text-foreground">QuickSplit</h1>
+    <div className="flex grow flex-col gap-y-5 overflow-y-auto transition-transform duration-300 bg-surface-bright">
+      <div className="flex h-20 shrink-0 items-start justify-between px-6 pt-6">
+        <div className="flex flex-col">
+          <h1 className="text-xl font-bold text-on-surface tracking-tight">QuickSplit</h1>
+          <span className="text-[10px] font-bold tracking-[0.15em] text-primary uppercase mt-0.5">
+            The Financial Atelier
+          </span>
+        </div>
         {onClose && (
           <button
             type="button"
@@ -27,10 +32,10 @@ function SidebarContent({
         )}
       </div>
 
-      <nav className="flex flex-1 flex-col px-6">
+      <nav className="flex flex-1 flex-col px-4">
         <ul role="list" className="flex flex-1 flex-col gap-y-7">
           <li>
-            <ul role="list" className="-mx-2 space-y-1">
+            <ul role="list" className="space-y-1">
               {navigation.map((item) => {
                 const isActive = pathname === item.href;
                 return (
@@ -38,18 +43,18 @@ function SidebarContent({
                     <Link
                       href={item.href}
                       prefetch={true}
-                      className={`group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold transition-colors ${
+                      className={`group flex gap-x-3 rounded-xl px-3 py-2.5 text-sm leading-6 font-semibold transition-all ${
                         isActive
                           ? "bg-primary/10 text-primary"
-                          : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                          : "text-muted-foreground hover:text-on-surface hover:bg-surface-container-low"
                       }`}
                       onClick={onClose}
                     >
                       <item.icon
-                        className={`h-6 w-6 shrink-0 ${
+                        className={`h-5 w-5 shrink-0 ${
                           isActive
                             ? "text-primary"
-                            : "text-muted-foreground group-hover:text-foreground"
+                            : "text-muted-foreground group-hover:text-on-surface"
                         }`}
                       />
                       {item.name}

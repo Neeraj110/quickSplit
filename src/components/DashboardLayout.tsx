@@ -71,6 +71,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       const fetchUser = async () => {
         try {
           const response = await fetch("/api/user");
+          if (response.status === 401) {
+            signOut({ callbackUrl: "/signin" });
+            return;
+          }
           if (!response.ok) throw new Error("Failed to fetch user data");
           const userData = await response.json();
           dispatch(setCredentials(userData));
@@ -136,7 +140,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             className="fixed inset-0 bg-opacity-75"
             onClick={() => setSidebarOpen(false)}
           />
-          <div className="fixed inset-y-0 left-0 flex w-64 flex-col  shadow-xl bg-background min-h-screen">
+          <div className="fixed inset-y-0 left-0 flex w-64 flex-col shadow-xl bg-surface-bright min-h-screen">
             <SidebarContent
               navigation={navigation}
               pathname={pathname}
@@ -151,8 +155,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         <SidebarContent navigation={navigation} pathname={pathname} />
       </div>
 
-      <div className="lg:pl-58">
-        <div className="sticky top-0 z-40 flex h-16 items-center gap-x-4 border-b bg-background/95 backdrop-blur px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8">
+      <div className="lg:pl-58 bg-background min-h-screen">
+        <div className="sticky top-0 z-40 flex h-16 items-center gap-x-4 bg-background/80 backdrop-blur-xl px-4 sm:gap-x-6 sm:px-6 lg:px-8">
           <Button
             variant="ghost"
             size="icon"

@@ -205,30 +205,6 @@ export async function POST(req: NextRequest) {
       });
 
       await settlement.save({ session: dbSession });
-      if (settlementData.expenseIds && settlementData.expenseIds.length > 0) {
-        let remainingAmount = settlementData.amount;
-
-        for (const expId of settlementData.expenseIds) {
-          if (remainingAmount <= 0) break;
-
-          const expense = await Expense.findById(expId).session(dbSession);
-          if (!expense) continue;
-
-          expense.splits = expense.splits.map((split: ISplit) => {
-            if (
-              split.userId.toString() === settlementData.payerId.toString() &&
-              remainingAmount > 0
-            ) {
-              const reduceAmt = Math.min(split.amount, remainingAmount);
-              split.amount -= reduceAmt;
-              remainingAmount -= reduceAmt;
-            }
-            return split;
-          });
-
-          await expense.save({ session: dbSession });
-        }
-      }
       createdSettlement = settlement;
     });
 

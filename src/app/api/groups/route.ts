@@ -95,113 +95,53 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    const groups = await Group.aggregate([
-      {
-        $match: { members: user._id },
-      },
-      // Lookup full expenses
-      {
-        $lookup: {
-          from: "expenses",
-          localField: "expenses",
-          foreignField: "_id",
-          as: "expenses",
-        },
-      },
-      // Lookup member and admin details
-      {
-        $lookup: {
-          from: "users",
-          localField: "members",
-          foreignField: "_id",
-          as: "members",
-          pipeline: [{ $project: { name: 1, email: 1 } }],
-        },
-      },
-      {
-        $lookup: {
-          from: "users",
-          localField: "admin",
-          foreignField: "_id",
-          as: "admin",
-          pipeline: [{ $project: { name: 1, email: 1 } }],
-        },
-      },
-      {
-        $addFields: {
-          admin: { $arrayElemAt: ["$admin", 0] },
-          totalSpent: {
-            $sum: "$expenses.amount",
-          },
-        },
-      },
-      // Calculate your paid total
-      {
-        $addFields: {
-          userPaid: {
-            $sum: {
-              $map: {
-                input: {
-                  $filter: {
-                    input: "$expenses",
-                    as: "exp",
-                    cond: { $eq: ["$$exp.payerId", user._id] },
-                  },
-                },
-                as: "paidExp",
-                in: "$$paidExp.amount",
-              },
-            },
-          },
-        },
-      },
-      // Calculate your owed total
-      {
-        $addFields: {
-          userOwed: {
-            $sum: {
-              $map: {
-                input: {
-                  $filter: {
-                    input: {
-                      $reduce: {
-                        input: "$expenses",
-                        initialValue: [],
-                        in: { $concatArrays: ["$$value", "$$this.splits"] },
-                      },
-                    },
-                    as: "split",
-                    cond: { $eq: ["$$split.userId", user._id] },
-                  },
-                },
-                as: "splitMatch",
-                in: "$$splitMatch.amount",
-              },
-            },
-          },
-        },
-      },
-      // Final balance
-      {
-        $addFields: {
-          yourBalance: { $subtract: ["$userPaid", "$userOwed"] },
-        },
-      },
-      {
-        $project: {
-          name: 1,
-          description: 1,
-          admin: 1,
-          members: 1,
-          expenses: 1,
-          totalSpent: 1,
-          yourBalance: 1,
-          createdAt: 1,
-          updatedAt: 1,
-        },
-      },
-      { $sort: { updatedAt: -1 } },
-    ]);
+    const dbGroups = await Group.find({ members: user._id })
+      .populate("members", "name email")
+      .populate("admin", "name email")
+      .populate({
+        path: "expenses",
+        select: "amount payerId splits",
+      })
+      .lean()
+      .sort({ updatedAt: -1 });
+
+    const groups = dbGroups.map((group: any) => {
+      let totalSpent = 0;
+      let userPaid = 0;
+      let userOwed = 0;
+
+      if (group.expenses && Array.isArray(group.expenses)) {
+        group.expenses.forEach((exp: any) => {
+          totalSpent += exp.amount || 0;
+          
+          if (exp.payerId && exp.payerId.toString() === user._id.toString()) {
+            userPaid += exp.amount || 0;
+          }
+          
+          if (exp.splits && Array.isArray(exp.splits)) {
+            const mySplit = exp.splits.find(
+              (s: any) => s.userId && s.userId.toString() === user._id.toString()
+            );
+            if (mySplit) {
+              userOwed += mySplit.amount || 0;
+            }
+          }
+        });
+      }
+
+      return {
+        _id: group._id,
+        name: group.name,
+        description: group.description,
+        admin: group.admin,
+        members: group.members,
+        expenses: group.expenses,
+        totalSpent,
+        yourBalance: userPaid - userOwed,
+        createdAt: group.createdAt,
+        updatedAt: group.updatedAt,
+      };
+    });
 
     return NextResponse.json(groups, { status: 200 });
   } catch (error) {
